@@ -5,38 +5,22 @@ Date: 2024-01-12
 
 Java version: 21.0.1
 
-Compilation: Command-line compilation: > javac *.java [executed twice]
-    Code for two standalone running Java processes is contained in this single source code file.
+Command-line compilation example:
+    >javac ColorServer.java
 
-    Compilation:
+To Start the server:
+    >java ColorServer
 
-    > javac ColorServer.java
-    > javac ColorServer.java
+To Start a client(can be more than one, each requires their own terminal window):
+    >java ColorClient
 
-    Command-line instructions for running these programs:
-
-    Client and server can run on the same machine in different processes (in separate terminal windows), or on
-    different machines across the Internet depending on the argument passed to the ColorClient program.
-
-    To run on localhost:
-
-    Terminal/CMD window 1> java ColorServer
-    Terminal/CMD window 2> java ColorClient
-    Terminal/CMD window 3> java ColorClient
-    [...]
-    Terminal/CMD window N> java ColorClient
-
-    Alternatively, to run over the Internet:
-
-    Terminal/CMD window 1> java ColorServer
-    Terminal/CMD window 2> java ColorClient 172.16.0.98 [But use the actual IP address of the ColorServer]
-    [...]
-
-Files needed: ColorServer.java
+Files needed: 
+    ColorServer.java
 
 7. Notes: 
 
-
+    I have added functionality to keep a simple ledger of color transactions made, it is shown when a client uses the quit command after a transaction
+    
  */
 
  import java.io.*;
