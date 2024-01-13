@@ -42,10 +42,15 @@ Files needed: ColorServer.java
  import java.io.*;
  import java.net.*;
  import java.util.Scanner;
+ import java.util.ArrayList;
 
 
 class ColorClient {
+
     private static int clientColorCount = 0;
+    //MODIFICATION: will track all colors sent and received by client
+    //  uses an ArrayList to hold Arrays of strings, a new Array will be added to the ledger after each transaction
+    private static ArrayList<String[]> colorLedger = new ArrayList<String[]>();
     public static void main(String argv[]) {
         ColorClient cc = new ColorClient(argv);
         cc.run(argv);
@@ -85,7 +90,11 @@ class ColorClient {
         }while (colorFromClient.indexOf("quit") < 0);
         consoleIn.close(); //Added this as it was not closed in the original ColorClient code
         System.out.println("Cancelled by user request.");
-        System.out.println(userName + ", You sent and received " + clientColorCount + " colors");
+        System.out.println(userName + ", You completed " + clientColorCount + " color transactions");
+
+        for(String[] s: colorLedger){
+            System.out.println("Transaction: " + (colorLedger.indexOf(s) + 1) + ", Color Sent: " + s[0] + ", Color Received: " + s[1]);
+        }
     }
 
     void getColor(String userName, String colorFromClient, String serverName){
@@ -94,12 +103,12 @@ class ColorClient {
             //create a ColorData object to pass the data to and from the server
             ColorData colorObj = new ColorData();
             colorObj.userName = userName;
-            colorObj.colorSent = colorFromClient;
+            colorObj.colorSentFromClient = colorFromClient;
             colorObj.colorCount = clientColorCount;
 
             //Establish a connection to the server
             Socket socket = new Socket(serverName, 45565);
-            System.out.println("/nWe have successfully connected to the ColorServer as port 45565");
+            System.out.println("\nWe have successfully connected to the ColorServer at port 45565");
 
             //establish an output stream using our socket
             OutputStream outStream = socket.getOutputStream();
@@ -118,10 +127,15 @@ class ColorClient {
 
             //record our colorcount in our client instance
             clientColorCount = inObject.colorCount;
+            String[] colorRecordPair = new String[2];
+            colorRecordPair[0] = inObject.colorSentFromClient;
+            colorRecordPair[1] = inObject.colorSentFromServer;
 
-            System.out.println("/nFROM THE SERVER:");
+            colorLedger.add(colorRecordPair);
+
+            System.out.println("\nFROM THE SERVER:");
             System.out.println(inObject.messageToClient);
-            System.out.println("The color sent back is: " + inObject.colorSent);
+            System.out.println("The color sent back is: " + inObject.colorSentFromServer);
             System.out.println("The color count is: " + inObject.colorCount + "\n");
 
             //Be sure to close our connection out when we are done
@@ -151,8 +165,8 @@ class ColorClient {
 class ColorData implements Serializable {
     //Allows this data to be serialized so that it can used by the object stream and sent over network
     String userName;
-    String colorReceived;
-    String colorSent;
+    String colorSentFromClient;
+    String colorSentFromServer;
     String messageToClient;
     int colorCount;
 }
@@ -180,15 +194,15 @@ class ColorWorker extends Thread {
             OutputStream outStream = sock.getOutputStream();
             ObjectOutputStream objectOutStream = new ObjectOutputStream(outStream);
 
-            System.out.println("\nFROM THE CLIENTL:\n");
+            System.out.println("\nFROM THE CLIENT:\n");
             System.out.println("Username: " + InObject.userName);
-            System.out.println("Color sent from the client " + InObject.colorReceived);
+            System.out.println("Color sent from the client: " + InObject.colorSentFromClient);
             System.out.println("Connections count (State!): " + (InObject.colorCount + 1));
 
-            InObject.colorSent = getRandomColor();
+            InObject.colorSentFromServer = getRandomColor();
             InObject.colorCount++;
             InObject.messageToClient = 
-                String.format("Thanks %s for sending the color %s", InObject.userName, InObject.colorReceived);
+                String.format("Thanks %s for sending the color %s", InObject.userName, InObject.colorSentFromClient);
 
             //Serialize our ColorData Object with the updated data and send it back to the client
             objectOutStream.writeObject(InObject);
